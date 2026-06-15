@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registration-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registration-db
+  template:
+    metadata:
+      labels:
+        app: registration-db
+    spec:
+      containers:
+      - name: registration-db
+        image: postgres:15
+        env:
+        - name: POSTGRES_USER
+          value: "user"
+        - name: POSTGRES_PASSWORD
+          value: "password"
+        - name: POSTGRES_DB
+          value: "registrationdb"
+        ports:
+        - containerPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registration-db
+spec:
+  selector:
+    app: registration-db
+  ports:
+  - port: 5432
+    targetPort: 5432

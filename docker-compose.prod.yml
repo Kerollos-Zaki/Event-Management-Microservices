@@ -1,0 +1,64 @@
+version: "3.9"
+services:
+  user-service:
+    build: ./services/user-service
+    restart: always
+    ports: ["8001:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:strongpassword@user-db:5432/userdb
+    depends_on: [user-db]
+
+  user-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: userdb
+    volumes: [user-db-prod:/var/lib/postgresql/data]
+
+  event-service:
+    build: ./services/event-service
+    restart: always
+    ports: ["8002:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:strongpassword@event-db:5432/eventdb
+    depends_on: [event-db]
+
+  event-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: eventdb
+    volumes: [event-db-prod:/var/lib/postgresql/data]
+
+  registration-service:
+    build: ./services/registration-service
+    restart: always
+    ports: ["8003:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:strongpassword@registration-db:5432/registrationdb
+      - EVENT_SERVICE_URL=http://event-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+    depends_on: [registration-db, event-service, notification-service]
+
+  registration-db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: strongpassword
+      POSTGRES_DB: registrationdb
+    volumes: [registration-db-prod:/var/lib/postgresql/data]
+
+  notification-service:
+    build: ./services/notification-service
+    restart: always
+    ports: ["8004:8000"]
+
+volumes:
+  user-db-prod:
+  event-db-prod:
+  registration-db-prod:

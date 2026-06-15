@@ -1,0 +1,49 @@
+version: "3.9"
+services:
+  user-service:
+    build: ./services/user-service
+    ports: ["9001:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:password@user-db-test:5432/userdb_test
+    depends_on: [user-db-test]
+
+  user-db-test:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: userdb_test
+
+  event-service:
+    build: ./services/event-service
+    ports: ["9002:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:password@event-db-test:5432/eventdb_test
+    depends_on: [event-db-test]
+
+  event-db-test:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eventdb_test
+
+  registration-service:
+    build: ./services/registration-service
+    ports: ["9003:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:password@registration-db-test:5432/registrationdb_test
+      - EVENT_SERVICE_URL=http://event-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+    depends_on: [registration-db-test, event-service, notification-service]
+
+  registration-db-test:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: registrationdb_test
+
+  notification-service:
+    build: ./services/notification-service
+    ports: ["9004:8000"]

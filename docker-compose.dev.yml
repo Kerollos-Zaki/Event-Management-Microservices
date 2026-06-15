@@ -1,0 +1,61 @@
+version: "3.9"
+services:
+  user-service:
+    build: ./services/user-service
+    ports: ["8001:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:password@user-db:5432/userdb
+    depends_on: [user-db]
+    volumes: ["./services/user-service:/app"]
+
+  user-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: userdb
+    volumes: [user-db-dev:/var/lib/postgresql/data]
+
+  event-service:
+    build: ./services/event-service
+    ports: ["8002:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:password@event-db:5432/eventdb
+    depends_on: [event-db]
+    volumes: ["./services/event-service:/app"]
+
+  event-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: eventdb
+    volumes: [event-db-dev:/var/lib/postgresql/data]
+
+  registration-service:
+    build: ./services/registration-service
+    ports: ["8003:8000"]
+    environment:
+      - DATABASE_URL=postgresql://user:password@registration-db:5432/registrationdb
+      - EVENT_SERVICE_URL=http://event-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+    depends_on: [registration-db, event-service, notification-service]
+    volumes: ["./services/registration-service:/app"]
+
+  registration-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: registrationdb
+    volumes: [registration-db-dev:/var/lib/postgresql/data]
+
+  notification-service:
+    build: ./services/notification-service
+    ports: ["8004:8000"]
+    volumes: ["./services/notification-service:/app"]
+
+volumes:
+  user-db-dev:
+  event-db-dev:
+  registration-db-dev:
